@@ -1,5 +1,3 @@
-
-
 // App Layers
 mod domain;
 mod controllers;
@@ -7,17 +5,22 @@ mod services;
 mod respositories;
 
 // Imports
-use domain::user;
+use actix_web::{App, web, HttpServer};
 
-fn main() {
-    println!("Tests");
-
-    let d = user::User {
-        _id: String::from("12345"),
-        name: String::from("ertert"),
-        phone: 13445,
-        active: true,
-    };
-
-    print!("User is: {:?}", d);
+#[actix_web::main]
+async fn main() -> std::io::Result<()> {
+    HttpServer::new(|| {
+        App::new()
+        .service(controllers::app::home)
+        .service(
+    web::scope("/api")
+                .service(controllers::app::home)
+                .service(
+                    web::scope("/users").configure(controllers::user::scope)         
+                )
+        )
+    })
+    .bind(("127.0.0.1", 8080))?
+    .run()
+    .await
 }
