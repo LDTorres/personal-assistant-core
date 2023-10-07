@@ -7,20 +7,26 @@ mod respositories;
 
 // Imports
 use actix_web::{App, web, HttpServer};
-use envy;
 use dotenvy;
-use config::Configuration;
+
+// Configs
+use config::Config;
+
+use log::info;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+    // Init env
     if let Ok(_) = dotenvy::dotenv() {
-        println!("Read envs from file")
-    }
-    
-    let config = envy::from_env::<Configuration>()
-    .expect("Please provide env vars");
+        // Init logger
+        env_logger::init();
 
-    HttpServer::new(|| {
+        info!("Envrioment variables loaded!");
+    }
+
+    let config = Config::get_config();
+
+    let result = HttpServer::new(|| {
         App::new()
         .service(controllers::app::home)
         .service(
@@ -31,7 +37,11 @@ async fn main() -> std::io::Result<()> {
                 )
         )
     })
-    .bind((config.host, config.port))?
-    .run()
-    .await
+    .workers(config.api.num_workers)
+    .bind((config.api.host.to_string(), config.api.port))?
+    .run();
+
+    info!("Server running at: http://{}:{}/", config.api.host, config.api.port);
+
+    result.await
 }
