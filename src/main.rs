@@ -8,10 +8,15 @@ mod respositories;
 // Imports
 use actix_web::{App, web, HttpServer};
 use envy;
+use dotenvy;
 use config::Configuration;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+    if let Ok(_) = dotenvy::dotenv() {
+        println!("Read envs from file")
+    }
+    
     let config = envy::from_env::<Configuration>()
     .expect("Please provide env vars");
 
