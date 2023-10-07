@@ -1,12 +1,12 @@
 // App Layers
 mod config;
-mod domain;
 mod controllers;
-mod services;
+mod domain;
 mod respositories;
+mod services;
 
 // Imports
-use actix_web::{App, web, HttpServer};
+use actix_web::{web, App, HttpServer};
 use dotenvy;
 
 // Configs
@@ -27,21 +27,20 @@ async fn main() -> std::io::Result<()> {
     let config = Config::get_config();
 
     let result = HttpServer::new(|| {
-        App::new()
-        .service(controllers::app::home)
-        .service(
-    web::scope("/api")
+        App::new().service(controllers::app::home).service(
+            web::scope("/api")
                 .service(controllers::app::home)
-                .service(
-                    web::scope("/users").configure(controllers::user::scope)         
-                )
+                .service(web::scope("/users").configure(controllers::user::scope)),
         )
     })
     .workers(config.api.num_workers)
     .bind((config.api.host.to_string(), config.api.port))?
     .run();
 
-    info!("Server running at: http://{}:{}/", config.api.host, config.api.port);
+    info!(
+        "Server running at: http://{}:{}/",
+        config.api.host, config.api.port
+    );
 
     result.await
 }

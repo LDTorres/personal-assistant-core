@@ -12,12 +12,13 @@ pub struct Config {
 
 impl Config {
     pub fn get_config() -> Config {
-        let api = envy::prefixed("API_").from_env::<api::ApiConfig>().expect("Please provide env vars");
-        let mongo = envy::prefixed("MONGO_").from_env::<mongo::MongoConfig>().expect("Please provide env vars");
+        let api = envy::prefixed("API_")
+            .from_env::<api::ApiConfig>()
+            .expect("Please provide api env vars");
+        let mongo = envy::prefixed("MONGO_")
+            .from_env::<mongo::MongoConfig>()
+            .expect("Please provide mongo env vars");
 
-        Config {
-            api,
-            mongo
-        }
+        Config { api, mongo }
     }
 }
