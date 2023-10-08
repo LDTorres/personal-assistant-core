@@ -39,10 +39,10 @@ pub fn scope(cfg: &mut web::ServiceConfig) {
     cfg.service(
         web::resource("/users")
             .route(
-                web::route().method(http::Method::GET).to(|| async { user_controller.get_users().await })
+                web::get().to(|| async { user_controller.get_users().await })
             ))
             .route(
-                "/:user_id", 
-                web::route().method(http::Method::GET).to(|http_request: HttpRequest| async { user_controller.get_user(http_request).await })
+                "/{user_id}", 
+                web::get().to(|http_request: HttpRequest| async { user_controller.get_user(http_request).await })
             );
 }
