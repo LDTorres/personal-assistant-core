@@ -1,26 +1,18 @@
 
 use std::io::Result;
-use mongodb::{self, bson::{doc, oid::ObjectId}, };
+use mongodb::{self, bson::{doc, oid::ObjectId} };
 use futures::stream::TryStreamExt;
 use async_trait::async_trait;
 
 use crate::domain::user;
 
-#[async_trait]
-pub trait UserRepository {
-    async fn get_users(&self) -> Result<Vec<user::User>>;
-    async fn get_user(&self, user_id: &str) ->  Result<user::User>;
-}
-
 pub struct MongoUserRepository<'a> {
-    pub conn: &'a mongodb::Database
+    pub conn: &'a mongodb::Database,
     pub coll: &'a mongodb::Collection<user::User>
 }
 
-
-
 impl<'a> MongoUserRepository<'a>  {
-    fn new(conn: &mongodb::Database) -> Self {
+    pub fn new(conn: &mongodb::Database) -> Self {
         let coll: &mongodb::Collection<user::User> = &conn.collection::<user::User>("users");
 
         Self {
@@ -31,7 +23,7 @@ impl<'a> MongoUserRepository<'a>  {
 }
 
 #[async_trait]
-impl<'a> UserRepository for MongoUserRepository<'a> {
+impl<'a> user::UserRepository for MongoUserRepository<'a> {
     async fn get_user(&self, user_id: &str) -> Result<user::User> {
         let object_id = ObjectId::parse_str(user_id).unwrap();
 
