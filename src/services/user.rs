@@ -1,15 +1,16 @@
 
 use std::io::Result;
+use std::rc;
 
 use crate::domain::user::UserRepository;
 use crate::domain;
 
-pub struct UserService<'a> {
-    repository: &'a dyn UserRepository
+pub struct UserService {
+    repository: rc::Rc<dyn UserRepository>
 }
 
-impl UserService<'_> {
-    pub fn new(repository: &impl UserRepository) -> Self {
+impl UserService {
+    pub fn new(repository: rc::Rc<dyn UserRepository>) -> Self {
         Self {
             repository
         }

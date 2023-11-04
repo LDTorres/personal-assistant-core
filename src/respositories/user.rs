@@ -6,14 +6,14 @@ use async_trait::async_trait;
 
 use crate::domain::user;
 
-pub struct MongoUserRepository<'a> {
-    pub conn: &'a mongodb::Database,
-    pub coll: &'a mongodb::Collection<user::User>
+pub struct MongoUserRepository {
+    pub conn: mongodb::Database,
+    pub coll: mongodb::Collection<user::User>
 }
 
-impl<'a> MongoUserRepository<'a>  {
-    pub fn new(conn: &mongodb::Database) -> Self {
-        let coll: &mongodb::Collection<user::User> = &conn.collection::<user::User>("users");
+impl MongoUserRepository  {
+    pub fn new(conn: mongodb::Database) -> Self {
+        let coll: mongodb::Collection<user::User> = conn.collection::<user::User>("users");
 
         Self {
             conn,
@@ -23,7 +23,7 @@ impl<'a> MongoUserRepository<'a>  {
 }
 
 #[async_trait]
-impl<'a> user::UserRepository for MongoUserRepository<'a> {
+impl user::UserRepository for MongoUserRepository {
     async fn get_user(&self, user_id: &str) -> Result<user::User> {
         let object_id = ObjectId::parse_str(user_id).unwrap();
 

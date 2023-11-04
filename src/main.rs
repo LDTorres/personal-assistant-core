@@ -48,11 +48,11 @@ async fn main() -> std::io::Result<()> {
 
     let conn = connect_database(&config.mongo).await;
 
-    let result = HttpServer::new(|| {
+    let result = HttpServer::new(move || {
         App::new().service(controllers::app::home).service(
             web::scope("/api")
                 .service(controllers::app::home)
-                .service(web::scope("/users").configure(controllers::user::scope)),
+                .service(web::scope("/users").configure(|cfg: &mut web::ServiceConfig| controllers::user::scope(cfg, conn.clone()))),
         )
     })
     .workers(config.api.num_workers)
