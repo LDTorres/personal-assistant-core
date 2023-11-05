@@ -24,15 +24,16 @@ async fn connect_database(config: &MongoConfig) -> Database {
         database,
     } = config;
 
-    let client_options = ClientOptions::parse(format!(
-        "mongodb://{user}:{password}@{host}:{port}/{database}"
-    ))
-    .await
-    .unwrap();
+    let client_options =
+        ClientOptions::parse(format!("mongodb://{user}:{password}@{host}:{port}/"))
+            .await
+            .unwrap();
 
     let client = mongodb::Client::with_options(client_options).unwrap();
 
-    client.database(&database[..])
+    let conn = client.database(&database[..]);
+
+    conn
 }
 
 #[actix_web::main]
@@ -50,9 +51,10 @@ async fn main() -> std::io::Result<()> {
 
     let result = HttpServer::new(move || {
         App::new().service(controllers::app::home).service(
-            web::scope("/api")
-                .service(controllers::app::home)
-                .service(web::scope("/users").configure(|cfg: &mut web::ServiceConfig| controllers::user::scope(cfg, conn.clone()))),
+            web::scope("/api").service(controllers::app::home).service(
+                web::scope("/users")
+                    .configure(|cfg: &mut web::ServiceConfig| controllers::user::scope(cfg, conn.clone())),
+            ),
         )
     })
     .workers(config.api.num_workers)

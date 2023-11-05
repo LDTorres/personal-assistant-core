@@ -1,45 +1,56 @@
-use actix_web::{web, HttpRequest, Responder};
+use actix_web::{get, web, HttpRequest, Responder};
+use log::info;
 use mongodb::Database;
+use std::cell::RefCell;
 use std::{io::Result, rc};
 
-use crate::{services::user::{self, UserService}, respositories::user::MongoUserRepository};
+use crate::{
+    respositories::user::MongoUserRepository,
+    services::user::{self, UserService},
+};
 
 pub struct UserAppData {
-    service: rc::Rc<user::UserService>,
+    service: RefCell<user::UserService>,
 }
 
-async fn get_users(_: HttpRequest, app_data: web::Data<UserAppData>) -> Result<impl Responder> {
-    match app_data.service.get_users().await {
+#[get("/")]
+pub async fn get_users(_: HttpRequest, data: web::Data<UserAppData>) -> Result<impl Responder> {
+    info!("get_users");
+
+    match data.service.borrow().get_users().await {
         Ok(users) => Ok(web::Json(users)),
         Err(err) => Err(err)
     }
 }
 
-async fn get_user(req: HttpRequest,  app_data: web::Data<UserAppData>) -> Result<impl Responder> {
-    let user_id = req.match_info().get("userId").unwrap();
+#[get("/{id}")]
+pub async fn get_user(req: HttpRequest, data: web::Data<UserAppData>) -> Result<impl Responder> {
+    let user_id = req.match_info().get("id").unwrap();
 
-    match app_data.service.get_user(user_id).await {
+    info!("get_user");
+
+    match data.service.borrow().get_user(user_id).await {
         Ok(user) => Ok(web::Json(user)),
         Err(err) => Err(err)
     }
 }
 
+pub fn config(conn: Database) -> web::Data<UserAppData> {
+    info!("Register users config");
 
+    let user_repository = rc::Rc::new(MongoUserRepository::new(conn));
+    let user_service = RefCell::new(UserService::new(user_repository));
 
+    web::Data::new(UserAppData {
+        service: user_service,
+    })
+}
 
 pub fn scope(cfg: &mut web::ServiceConfig, conn: Database) {
-    let user_repository = rc::Rc::new(MongoUserRepository::new(conn));
-    let user_service = rc::Rc::new(UserService::new(user_repository));
+    info!("Register users controllers");
 
-
-    cfg.service(
-        web::resource("/users")
-            .app_data(UserAppData{service: rc::Rc::clone(&user_service)})
-            .route(
-                web::get().to( get_users)
-            ))
-            .route(
-                "/{user_id}", 
-                web::get().to(get_user)
-            );
+    cfg
+    .app_data(config(conn.clone()))
+    .service(get_users)
+    .service(get_user);
 }
