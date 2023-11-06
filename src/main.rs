@@ -13,7 +13,7 @@ use mongodb::{options::ClientOptions, Database};
 // Configs
 use config::{mongo::MongoConfig, Config};
 
-use log::info;
+use log;
 
 async fn connect_database(config: &MongoConfig) -> Database {
     let MongoConfig {
@@ -61,7 +61,7 @@ async fn main() -> std::io::Result<()> {
     .bind((config.api.host.to_string(), config.api.port))?
     .run();
 
-    info!(
+    log::info!(
         "Server running at: http://{}:{}/",
         config.api.host, config.api.port
     );

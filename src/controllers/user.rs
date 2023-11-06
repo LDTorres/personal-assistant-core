@@ -1,5 +1,5 @@
-use actix_web::{get, web, HttpRequest, Responder};
-use log::info;
+use actix_web::{get, web, HttpRequest, Responder, Scope};
+use log;
 use mongodb::Database;
 use std::cell::RefCell;
 use std::{io::Result, rc};
@@ -15,7 +15,7 @@ pub struct UserAppData {
 
 #[get("/")]
 pub async fn get_users(_: HttpRequest, data: web::Data<UserAppData>) -> Result<impl Responder> {
-    info!("get_users");
+    log::info!("get_users");
 
     match data.service.borrow().get_users().await {
         Ok(users) => Ok(web::Json(users)),
@@ -25,9 +25,9 @@ pub async fn get_users(_: HttpRequest, data: web::Data<UserAppData>) -> Result<i
 
 #[get("/{id}")]
 pub async fn get_user(req: HttpRequest, data: web::Data<UserAppData>) -> Result<impl Responder> {
-    let user_id = req.match_info().get("id").unwrap();
+    log::info!("get_user");
 
-    info!("get_user");
+    let user_id = req.match_info().get("id").unwrap();
 
     match data.service.borrow().get_user(user_id).await {
         Ok(user) => Ok(web::Json(user)),
@@ -36,7 +36,7 @@ pub async fn get_user(req: HttpRequest, data: web::Data<UserAppData>) -> Result<
 }
 
 pub fn config(conn: Database) -> web::Data<UserAppData> {
-    info!("Register users config");
+    log::info!("Register users config");
 
     let user_repository = rc::Rc::new(MongoUserRepository::new(conn));
     let user_service = RefCell::new(UserService::new(user_repository));
@@ -47,10 +47,10 @@ pub fn config(conn: Database) -> web::Data<UserAppData> {
 }
 
 pub fn scope(cfg: &mut web::ServiceConfig, conn: Database) {
-    info!("Register users controllers");
+    log::info!("Register users controllers");
 
     cfg
-    .app_data(config(conn.clone()))
-    .service(get_users)
-    .service(get_user);
+        .app_data(config(conn))
+        .service(get_users)
+        .service(get_user);
 }
