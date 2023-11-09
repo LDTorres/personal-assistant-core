@@ -40,14 +40,18 @@ async fn connect_database(config: &MongoConfig) -> Database {
 async fn main() -> std::io::Result<()> {
     // Init env
     if let Ok(_) = dotenvy::dotenv() {
-        println!("Read envs from file");
+        println!("Read envs from file\n");
     }
 
     env_logger::init();
 
     let config: Config = Config::get_config();
 
+    log::info!("config loaded {:?}\n", &config);
+
     let conn = connect_database(&config.mongo).await;
+
+    log::info!("Database connection stablished\n");
 
     let result = HttpServer::new(move || {
         App::new().service(controllers::app::home).service(

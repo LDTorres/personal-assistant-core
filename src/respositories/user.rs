@@ -38,9 +38,19 @@ impl user::UserRepository for MongoUserRepository {
         let mut users: Vec<user::User> = Vec::new();
 
         while let Some(user) = cursor.try_next().await.unwrap() {
-            users.push(user)
+            users.push(user);
         }
 
         Ok(users)
+    }
+
+    async fn create_user(&self, mut user: user::User) -> Result<user::User> {
+        let result: mongodb::results::InsertOneResult = self.coll.insert_one(&user, None).await.unwrap();
+
+        let inserted_id = result.inserted_id.as_object_id();
+
+        user.id = inserted_id;
+
+        return Ok(user);
     }
 }
