@@ -4,6 +4,7 @@ mod controllers;
 mod domain;
 mod respositories;
 mod services;
+mod common;
 
 // Imports
 use actix_web::{web, App, HttpServer};

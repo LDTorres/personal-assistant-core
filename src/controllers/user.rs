@@ -1,9 +1,10 @@
-use actix_web::{get, web, HttpRequest, Responder, Scope};
+use actix_web::{get, web, HttpRequest, Responder};
 use log;
 use mongodb::Database;
 use std::cell::RefCell;
 use std::{io::Result, rc};
 
+use crate::services::dto;
 use crate::{
     respositories::user::MongoUserRepository,
     services::user::{self, UserService},
@@ -14,10 +15,10 @@ pub struct UserAppData {
 }
 
 #[get("/")]
-pub async fn get_users(_: HttpRequest, data: web::Data<UserAppData>) -> Result<impl Responder> {
+pub async fn get_users(filters: web::Query<dto::get_users_dto::GetUsersDTO>, data: web::Data<UserAppData>) -> Result<impl Responder> {
     log::info!("get_users");
 
-    match data.service.borrow().get_users().await {
+    match data.service.borrow().get_users(filters.into_inner()).await {
         Ok(users) => Ok(web::Json(users)),
         Err(err) => Err(err)
     }
