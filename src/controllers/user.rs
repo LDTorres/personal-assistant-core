@@ -3,6 +3,7 @@ use log;
 use mongodb::Database;
 use std::{io::Result, rc};
 
+use crate::services::dto;
 use crate::{
     respositories::user::MongoUserRepository,
     services::user::UserService,
@@ -13,10 +14,10 @@ pub struct UserAppData {
 }
 
 #[get("/")]
-pub async fn get_users(_: HttpRequest, data: web::Data<UserAppData>) -> Result<impl Responder> {
+pub async fn get_users(filters: web::Query<dto::get_users_dto::GetUsersDTO>, data: web::Data<UserAppData>) -> Result<impl Responder> {
     log::debug!("get_users");
 
-    match data.service.get_users().await {
+    match data.service.get_users(filters.into_inner()).await {
         Ok(users) => Ok(web::Json(users)),
         Err(err) => Err(err)
     }
